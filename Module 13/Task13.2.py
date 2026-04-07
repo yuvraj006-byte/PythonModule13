@@ -11,25 +11,25 @@ db_pass = os.getenv("DB_PASSWORD")
 db_port = os.getenv("DB_PORT")
 db_name = os.getenv("DB_NAME")
 
-connection = mysql.connector.connect(
-    host=db_host,
-    port=db_port,
-    database=db_name,
-    user=db_user,
-    password=db_pass,
-    autocommit=True
-)
-
 
 def get_airport(ident):
+    connection = mysql.connector.connect(
+        host=db_host,
+        port=int(db_port),
+        database=db_name,
+        user=db_user,
+        password=db_pass,
+        autocommit=True
+    )
+
     sql = "SELECT name, municipality FROM airport WHERE ident = %s"
     cursor = connection.cursor()
     cursor.execute(sql, (ident,))
 
     result = cursor.fetchone()
     cursor.close()
-    connection.close()
 
+    connection.close()
     if result:
         return {
             "name": result[0],
@@ -82,4 +82,5 @@ def airport_route(ident):
 
 
 if __name__ == '__main__':
+    app.json.ensure_ascii = False
     app.run(debug=True, host='127.0.0.1', port=5000)
