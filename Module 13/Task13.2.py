@@ -1,6 +1,6 @@
 import mysql.connector
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify
 import os
 
 load_dotenv()
@@ -27,6 +27,8 @@ def get_airport(ident):
     cursor.execute(sql, (ident,))
 
     result = cursor.fetchone()
+    cursor.close()
+    connection.close()
 
     if result:
         return {
@@ -40,21 +42,43 @@ def get_airport(ident):
 app = Flask(__name__)
 
 
+@app.route('/')
+def wrong_url():
+    return jsonify({
+        "message": "Missing some parts of the url",
+        "status": 404
+    }), 404
+
+
+@app.route('/airport', defaults={'ident': None})
 @app.route('/airport/<ident>')
 def airport_route(ident):
 
-    airport = get_airport(ident)
+    if ident is None:
+        return jsonify({
+            "message": "Missing airport ident",
+            "status": 400
+        }), 400
 
-    if not airport:
-        return jsonify({"error": "Airport not found"}), 404
+    try:
+        airport = get_airport(ident)
 
-    response = {
-        "ident": ident,
-        "name": airport["name"],
-        "loc": airport["loc"]
-    }
+        if not airport:
+            return jsonify({"error": "Airport not found"}), 404
 
-    return jsonify(response)
+        response = {
+            "ident": ident,
+            "name": airport["name"],
+            "loc": airport["loc"]
+        }
+
+        return jsonify(response)
+
+    except Exception:
+        return jsonify({
+            'message': "Something Went Wrong",
+            "status": 500
+        }), 500
 
 
 if __name__ == '__main__':
