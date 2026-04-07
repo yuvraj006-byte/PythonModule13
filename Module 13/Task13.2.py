@@ -1,8 +1,10 @@
 import mysql.connector
 from dotenv import load_dotenv
+from flask import Flask, request, jsonify
 import os
 
 load_dotenv()
+
 db_host = os.getenv("DB_HOST")
 db_user = os.getenv("DB_USER")
 db_pass = os.getenv("DB_PASSWORD")
@@ -17,3 +19,43 @@ connection = mysql.connector.connect(
     password=db_pass,
     autocommit=True
 )
+
+
+def get_airport(ident):
+    sql = "SELECT name, iso_country FROM airport WHERE ident = %s"
+    cursor = connection.cursor()
+    cursor.execute(sql, (ident,))
+
+    result = cursor.fetchone()
+
+    if result:
+        return {
+            "name": result[0],
+            "loc": result[1]
+        }
+    else:
+        return None
+
+
+app = Flask(__name__)
+
+
+@app.route('/airport/<ident>')
+def airport_route(ident):
+
+    airport = get_airport(ident)
+
+    if not airport:
+        return jsonify({"error": "Airport not found"}), 404
+
+    response = {
+        "ident": ident,
+        "name": airport["name"],
+        "loc": airport["loc"]
+    }
+
+    return jsonify(response)
+
+
+if __name__ == '__main__':
+    app.run(debug=True, host='127.0.0.1', port=5000)
