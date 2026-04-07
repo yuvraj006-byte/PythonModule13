@@ -22,7 +22,7 @@ connection = mysql.connector.connect(
 
 
 def get_airport(ident):
-    sql = "SELECT name, iso_country FROM airport WHERE ident = %s"
+    sql = "SELECT name, municipality FROM airport WHERE ident = %s"
     cursor = connection.cursor()
     cursor.execute(sql, (ident,))
 
@@ -33,7 +33,7 @@ def get_airport(ident):
     if result:
         return {
             "name": result[0],
-            "loc": result[1]
+            "municipality": result[1]
         }
     else:
         return None
@@ -67,9 +67,9 @@ def airport_route(ident):
             return jsonify({"error": "Airport not found"}), 404
 
         response = {
-            "ident": ident,
-            "name": airport["name"],
-            "loc": airport["loc"]
+            "ICAO": ident,
+            "Municipality": airport["municipality"],
+            "Name": airport["name"]
         }
 
         return jsonify(response)
